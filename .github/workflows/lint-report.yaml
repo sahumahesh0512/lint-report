@@ -54,7 +54,8 @@ jobs:
           path: reports/junit.html
  
       - name: HTML Preview
-        uses: actions/html-preview@v1
+        id: html_preview
+        uses: pavi2410/html-preview-action@v2
         with:
           github_token: ${{ secrets.TOKEN_GITHUB }}
           artifact_name: html-report
