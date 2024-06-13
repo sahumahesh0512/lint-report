@@ -43,8 +43,14 @@ jobs:
           name: junit-report
           path: reports
  
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+ 
       - name: Convert JUnit XML to HTML
         run: |
+          export PATH=$PATH:~/.local/bin
           junit2html reports/junit.xml reports/junit.html
  
       - name: Upload HTML report
