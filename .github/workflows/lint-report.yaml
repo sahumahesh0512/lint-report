@@ -44,7 +44,9 @@ jobs:
           path: reports 
       - name: Install junit2html
         run: |
-          python -m pip install junit2html
+          sudo apt-get update
+          sudo apt-get install python3-pip  # Install pip for Python 3
+          pip3 install junit2html
  
       - name: Convert JUnit XML to HTML
         run: |
