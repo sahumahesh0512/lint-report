@@ -1,0 +1,61 @@
+name: CI Workflow
+ 
+on:
+  workflow_dispatch:
+ 
+jobs:
+  pytest:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+ 
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'  # Specify the Python version you need
+ 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+ 
+      - name: Run tests
+        run: |
+          pytest --junitxml=reports/junit.xml
+ 
+      - name: Upload JUnit test report
+        uses: actions/upload-artifact@v2
+        with:
+          name: junit-report
+          path: reports/junit.xml
+ 
+  html-report:
+    runs-on: self-hosted
+    needs: pytest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+ 
+      - name: Download JUnit report
+        uses: actions/download-artifact@v2
+        with:
+          name: junit-report
+          path: reports
+ 
+      - name: Convert JUnit XML to HTML
+        run: |
+          junit2html reports/junit.xml reports/junit.html
+ 
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-report
+          path: reports/junit.html
+ 
+      - name: HTML Preview
+        uses: actions/html-preview@v1
+        with:
+          github_token: ${{ secrets.TOKEN_GITHUB }}
+          artifact_name: html-report
+          file: junit.html
