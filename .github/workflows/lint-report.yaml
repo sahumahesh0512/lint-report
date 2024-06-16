@@ -44,7 +44,7 @@ jobs:
           path: reports/junit.html
 
       - name: Generate Test Summary
-        id: test-summary
+        id: generate-test-summary
         run: |
           echo "## Test Results Summary" > results-summary.md
           echo "| Test File | Result |" >> results-summary.md
@@ -59,7 +59,7 @@ jobs:
           script: |
             const fs = require('fs');
             const summary = fs.readFileSync('results-summary.md', 'utf8');
-            github.issues.createComment({
+            github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
