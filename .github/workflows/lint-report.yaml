@@ -2,6 +2,12 @@ name: CI Workflow
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   pytest:
@@ -52,7 +58,12 @@ jobs:
           pytest --tb=short --maxfail=1 --junitxml=results-summary.md
           cat results-summary.md
 
+      - name: Determine if Pull Request
+        id: get-context
+        run: echo "::set-output name=is_pr::${{ github.event_name == 'pull_request' }}"
+
       - name: Post Test Summary as a Comment
+        if: steps.get-context.outputs.is_pr == 'true'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -62,7 +73,7 @@ jobs:
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: context.payload.pull_request.number,
               body: summary
             })
 
