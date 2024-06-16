@@ -106,9 +106,8 @@ jobs:
           name: html-report
           path: reports/junit.html
 
-      - name: HTML Preview
-        uses: actions/github-pages-deploy-action@v4.2.5
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          branch: gh-pages
-          folder: reports
-          clean: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./reports
