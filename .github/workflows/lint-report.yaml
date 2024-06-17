@@ -3,10 +3,10 @@ name: CI Workflow
 on:
   push:
     branches:
-      - main
+      - gha-linter
   pull_request:
     branches:
-      - main
+      - gha-linter
 
 jobs:
   pytest:
@@ -71,6 +71,11 @@ jobs:
           html_file: 'reports/junit.html'
 
       - name: Post HTML preview link as comment
-        if: always()
-        run: |
-          echo "HTML preview is available at \${{ steps.html_preview.outputs.url }}"
+        if: github.event_name == 'pull_request'
+        uses: octokit/request-action@v2
+        with:
+          route: POST /repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments
+          body: |
+            HTML preview is available [here](${{ steps.html_preview.outputs.url }})
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
