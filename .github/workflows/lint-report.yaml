@@ -6,7 +6,8 @@ on:
       - gha-linter
   pull_request:
     branches:
-      - gha-linter
+      - main
+
 
 jobs:
   pytest:
