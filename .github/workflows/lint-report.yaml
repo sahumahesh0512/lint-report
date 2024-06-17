@@ -2,7 +2,9 @@ name: CI Workflow
  
 on:
   workflow_dispatch:
- 
+  push:
+    branches:
+      - test
 jobs:
   pytest:
     runs-on: self-hosted
