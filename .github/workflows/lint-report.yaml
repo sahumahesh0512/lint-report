@@ -1,8 +1,11 @@
 name: CI Workflow
  
 on:
-  workflow_dispatch:
+ 
   push:
+    branches:
+      - test
+  pull_request:
     branches:
       - test
 jobs:
