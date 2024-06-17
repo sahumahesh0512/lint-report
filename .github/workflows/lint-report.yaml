@@ -1,72 +1,76 @@
 name: CI Workflow
- 
+
 on:
- 
   push:
     branches:
-      - test
+      - main
   pull_request:
     branches:
-      - test
+      - main
+
 jobs:
   pytest:
     runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
- 
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'  # Specify the Python version you need
- 
+          python-version: '3.8'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
- 
+
       - name: Run tests
         run: |
           pytest --junitxml=reports/junit.xml
- 
+
       - name: Upload JUnit test report
         uses: actions/upload-artifact@v2
         with:
           name: junit-report
           path: reports/junit.xml
- 
+
   html-report:
     runs-on: self-hosted
     needs: pytest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
- 
+
       - name: Download JUnit report
         uses: actions/download-artifact@v2
         with:
           name: junit-report
-          path: reports 
+          path: reports
+
       - name: Install junit2html
         run: |
           sudo apt-get update
-          sudo apt-get install python3-pip  # Install pip for Python 3
+          sudo apt-get install python3-pip
           pip3 install junit2html
- 
+
       - name: Convert JUnit XML to HTML
         run: |
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
- 
+
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
           name: html-report
           path: reports/junit.html
- 
+
       - name: HTML Preview
         id: html_preview
         uses: pavi2410/html-preview-action@v2
         with:
-          github_token: ${{ secrets.TOKEN_GITHUB }}
-          artifact_name: html-report
-          file: junit.html
+          html_file: 'reports/junit.html'
+
+      - name: Post HTML preview link as comment
+        if: always()
+        run: |
+          echo "HTML preview is available at \${{ steps.html_preview.outputs.url }}"
