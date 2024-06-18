@@ -46,7 +46,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: junit-report
-          path: reports 
+          path: reports
 
       - name: Install junit2html
         run: |
@@ -58,23 +58,36 @@ jobs:
         run: |
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
 
+      - name: Create Zip File
+        run: |
+          zip -j reports/html-report.zip reports/junit.html
+
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
           name: html-report
-          path: reports/junit.html
+          path: reports/html-report.zip
+
+      - name: Download and Extract HTML report
+        uses: actions/download-artifact@v2
+        with:
+          name: html-report
+          path: extracted-html-report
+      - name: Unzip HTML report
+        run: |
+          unzip extracted-html-report/html-report.zip -d extracted-html-report
 
       - name: HTML Preview
         id: html_preview
         uses: pavi2410/html-preview-action@v2
         with:
           github_token: ${{ secrets.TOKEN_GITHUB }}
-          artifact_name: html-report 
-          file: junit.html
+          artifact_name: html-report
+          file: extracted-html-report/junit.html
 
       - name: Debug HTML Preview URL
         run: echo "Preview URL:${{ steps.html_preview.outputs.url }}"
-      
+
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v2
@@ -84,4 +97,3 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             HTML preview is available [here](${{ steps.html_preview.outputs.url }})
-
