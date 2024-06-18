@@ -68,25 +68,22 @@ jobs:
           name: html-report
           path: reports/html-report.zip
 
-      - name: Download and Extract HTML report
-        uses: actions/download-artifact@v2
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
         with:
-          name: html-report
-          path: extracted-html-report
-      - name: Unzip HTML report
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copy HTML file to gh-pages
         run: |
           unzip extracted-html-report/html-report.zip -d extracted-html-report
-
-      - name: HTML Preview
-        id: html_preview
-        uses: pavi2410/html-preview-action@v2
-        with:
-          github_token: ${{ secrets.TOKEN_GITHUB }}
-          artifact_name: html-report
-          file: extracted-html-report/junit.html
-
-      - name: Debug HTML Preview URL
-        run: echo "Preview URL:${{ steps.html_preview.outputs.url }}"
+          cp extracted-html-report/junit.html gh-pages/
+          cd gh-pages
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add junit.html
+          git commit -m "Update HTML report"
+          git push origin gh-pages
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
@@ -96,4 +93,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](${{ steps.html_preview.outputs.url }})
+            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
