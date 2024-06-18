@@ -68,6 +68,18 @@ jobs:
           name: html-report
           path: reports/html-report.zip
 
+      - name: Download HTML report artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: html-report
+          path: extracted-html-report
+
+      - name: List files for debugging
+        run: ls -R extracted-html-report
+
+      - name: Unzip HTML report
+        run: unzip extracted-html-report/html-report.zip -d extracted-html-report
+
       - name: Checkout gh-pages
         uses: actions/checkout@v2
         with:
@@ -76,7 +88,6 @@ jobs:
 
       - name: Copy HTML file to gh-pages
         run: |
-          unzip extracted-html-report/html-report.zip -d extracted-html-report
           cp extracted-html-report/junit.html gh-pages/
           cd gh-pages
           git config --local user.email "action@github.com"
