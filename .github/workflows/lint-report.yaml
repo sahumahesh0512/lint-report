@@ -62,11 +62,16 @@ jobs:
         run: |
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
 
+      - name: Extract HTML report
+        run: |
+          mkdir extracted_html
+          unzip -q reports/junit.html -d extracted_html
+
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
           name: html-report
-          path: reports/junit.html
+          path: extracted_html
 
       - name: HTML Preview
         id: html_preview
