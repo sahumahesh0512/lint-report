@@ -24,11 +24,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       - name: Run tests
         run: |
           pytest --junitxml=reports/junit.xml
-
       - name: Upload JUnit test report
         uses: actions/upload-artifact@v2
         with:
@@ -51,29 +49,53 @@ jobs:
       - name: Install junit2html
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip
+          sudo apt-get install python3-pip
           pip3 install junit2html
-
       - name: Convert JUnit XML to HTML
         run: |
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
-
+      - name: Create Zip File
+        run: |
+          zip -j reports/html-report.zip reports/junit.html
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
           name: html-report
-          path: reports/junit.html
+          path: reports/html-report.zip
 
-      - name: HTML Preview
-        id: html_preview
-        uses: pavi2410/html-preview-action@v2
+      - name: Download HTML report artifact
+        uses: actions/download-artifact@v2
         with:
-          html_file: 'junit.html'
+          name: html-report
+          path: extracted-html-report
 
+      - name: List files for debugging
+        run: ls -R extracted-html-report
+
+      - name: Unzip HTML report
+        run: unzip extracted-html-report/html-report.zip -d extracted-html-report
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copy HTML file to gh-pages
+        run: |
+          cp extracted-html-report/junit.html gh-pages/
+          cd gh-pages
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add junit.html
+          git commit -m "Update HTML report"
+          git push origin gh-pages
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
-        run: |
-          echo "HTML preview is available [here](${{ steps.html_preview.outputs.url }})" |
-          gh pr comment ${{ github.event.pull_request.number }} --body -
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            HTML preview is available [here](${{ steps.html_preview.outputs.url }})
