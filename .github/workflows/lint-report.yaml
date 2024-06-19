@@ -110,7 +110,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add junit.html
-          git commit -m "Update HTML report"
+         
           git push origin gh-pages
 
       
