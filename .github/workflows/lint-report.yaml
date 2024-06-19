@@ -65,9 +65,8 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Copy HTML file to gh-pages and push
+      - name: Commit and push HTML file to gh-pages
         run: |
-          cp gh-pages/junit.html gh-pages/
           cd gh-pages
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
