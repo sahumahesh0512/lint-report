@@ -56,21 +56,23 @@ jobs:
 
       - name: Convert JUnit XML to HTML
         run: |
-          ~/.local/bin/junit2html reports/junit.xml reports/junit.html
+          ~/.local/bin/junit2html reports/junit.xml index.html
 
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v2
-        with:
-          name: html-report
-          path: reports/junit.html
+      - name: Commit and push HTML report
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add HTML report"
+          git push
 
       - name: HTML Preview
         id: html_preview
         uses: pavi2410/html-preview-action@v2
         with:
-          github_token: ${{ secrets.TOKEN_GITHUB }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           artifact_name: html-report
-          file: junit.html
+          file: index.html
 
       - name: Get HTML Preview URL
         run: echo "HTML Preview URL:${{ steps.html_preview.outputs.url }}"
