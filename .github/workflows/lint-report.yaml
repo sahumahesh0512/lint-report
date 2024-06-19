@@ -105,7 +105,7 @@ jobs:
 
       - name: Copy HTML file to gh-pages
         run: |
-          cp extracted-html-report/junit.html gh-pages/
+         
           cd gh-pages
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
