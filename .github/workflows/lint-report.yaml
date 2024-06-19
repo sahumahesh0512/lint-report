@@ -39,11 +39,8 @@ jobs:
     runs-on: self-hosted
     needs: pytest
     steps:
-      - name: Checkout gh-pages
+      - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-          path: gh-pages
 
       - name: Download JUnit report
         uses: actions/download-artifact@v2
@@ -59,23 +56,24 @@ jobs:
 
       - name: Convert JUnit XML to HTML
         run: |
-          ~/.local/bin/junit2html reports/junit.xml gh-pages/junit.html
+          ~/.local/bin/junit2html reports/junit.xml reports/junit.html
 
-      - name: Commit and push HTML file to gh-pages
-        run: |
-          cd gh-pages
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add junit.html
-          git commit -m "Update HTML report" || echo "No changes to commit"
-          git push origin gh-pages
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-report
+          path: reports/junit.html
+
+      - name: HTML Preview
+        id: html_preview
+        uses: pavi2410/html-preview-action@v2
+        with:
+          html_file: 'junit.html'
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          token: ${{ secrets.TOKEN_GITHUB }}
-          repository: ${{ github.repository }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
+        run: |
+          echo "HTML preview is available [here](${{ steps.html_preview.outputs.url }})" |
+          gh pr comment ${{ github.event.pull_request.number }} --body -
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
