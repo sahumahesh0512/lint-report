@@ -39,8 +39,11 @@ jobs:
     runs-on: self-hosted
     needs: pytest
     steps:
-      - name: Checkout code
+      - name: Checkout gh-pages
         uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          path: gh-pages
 
       - name: Download JUnit report
         uses: actions/download-artifact@v2
@@ -56,14 +59,7 @@ jobs:
 
       - name: Convert JUnit XML to HTML
         run: |
-          mkdir -p gh-pages
           ~/.local/bin/junit2html reports/junit.xml gh-pages/junit.html
-
-      - name: Checkout gh-pages
-        uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-          path: gh-pages
 
       - name: Commit and push HTML file to gh-pages
         run: |
@@ -71,7 +67,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add junit.html
-          git commit -m "Update HTML report"
+          git commit -m "Update HTML report" || echo "No changes to commit"
           git push origin gh-pages
 
       - name: Post HTML preview link as comment
