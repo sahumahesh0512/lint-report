@@ -2,11 +2,10 @@ name: Preview HTML
 
 on:
   push:
-   branches:
-     - htmlpreview
+    branches:
+      - htmlpreview
   pull_request:
     types: [opened, synchronize, reopened]
-
 
 jobs:
   generate-and-preview-html:
