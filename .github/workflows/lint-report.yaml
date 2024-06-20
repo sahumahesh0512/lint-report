@@ -1,85 +1,50 @@
-name: CI Workflow
+name: Run Python Function and Generate Report
 
 on:
-  push:
-    branches:
-      - test  # Trigger on pushes to the test branch
   pull_request:
     branches:
-      - main  # Trigger on pull requests targeting the main branch
+      - main
 
 jobs:
-  pytest:
-    runs-on: self-hosted
+  run-tests:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.head_ref }}  # Checkout the branch or PR head
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'  
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Run tests
-        run: |
-          pytest --junitxml=reports/junit.xml
+    - name: Run script and generate report
+      run: |
+        python my_script.py
 
-      - name: Upload JUnit test report
-        uses: actions/upload-artifact@v2
-        with:
-          name: junit-report
-          path: reports/junit.xml
+    - name: Upload report
+      uses: actions/upload-artifact@v2
+      with:
+        name: report
+        path: report.html
 
-  html-report:
-    runs-on: self-hosted
-    needs: pytest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.head_ref }}  # Checkout the branch or PR head
-
-      - name: Download JUnit report
-        uses: actions/download-artifact@v2
-        with:
-          name: junit-report
-          path: reports 
-
-      - name: Install junit2html
-        run: |
-          sudo apt-get update
-          sudo apt-get install python3-pip  # Install pip for Python 3
-          pip3 install junit2html
-
-      - name: Convert JUnit XML to HTML
-        run: |
-          ~/.local/bin/junit2html reports/junit.xml reports/junit.html
-
-      - name: Extract HTML report
-        run: |
-          mkdir extracted_html
-          unzip -q reports/junit.html -d extracted_html
-
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v2
-        with:
-          name: html-report
-          path: extracted_html
-
-      - name: HTML Preview
-        id: html_preview
-        uses: pavi2410/html-preview-action@v2
-        with:
-          github_token: ${{ secrets.TOKEN_GITHUB }}
-          artifact_name: html-report
-          file: junit.html
-
-      - name: Get HTML Preview URL
-        run: echo "HTML Preview URL:${{ steps.html_preview.outputs.url }}"
+    - name: Post report link as PR comment
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        REPORT_URL=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" \
+          | jq -r '.artifacts[] | select(.name=="report") | .archive_download_url')
+        
+        COMMENT="### :page_facing_up: Report\n\nYou can download the report [here](${REPORT_URL})"
+        
+        curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Content-Type: application/json" \
+          -X POST \
+          -d "{\"body\":\"${COMMENT}\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments"
