@@ -4,6 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+
 jobs:
   generate-and-preview-html:
     runs-on: self-hosted
