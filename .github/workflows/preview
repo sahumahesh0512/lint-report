@@ -5,7 +5,8 @@ on:
     branches:
       - htmlpreview
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - htmlpreview
 
 jobs:
   generate-and-preview-html:
