@@ -41,14 +41,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Download and convert JUnit report to HTML
+      - name: Create reports directory and install dependencies
         run: |
           mkdir -p reports
           sudo apt-get update
-          sudo apt-get install python3-pip
+          sudo apt-get install -y python3-pip
           pip3 install junit2html
-          actions/download-artifact@v2 --name junit-report --path reports
-          ~/.local/bin/junit2html reports/junit.xml reports/junit.html
+
+      - name: Download JUnit report
+        uses: actions/download-artifact@v2
+        with:
+          name: junit-report
+          path: reports
+
+      - name: Convert JUnit XML to HTML
+        run: ~/.local/bin/junit2html reports/junit.xml reports/junit.html
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
