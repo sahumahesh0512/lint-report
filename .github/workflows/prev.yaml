@@ -77,7 +77,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.TOKEN_GITHUB }}
           script: |
             const previewUrl = `{{ steps.html_preview.outputs.url }}`;
             const comment = `🚀 [Preview HTML File](${previewUrl})`;
