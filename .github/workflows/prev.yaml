@@ -26,8 +26,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        run: |
-          pytest --junitxml=reports/junit.xml
+        run: pytest --junitxml=reports/junit.xml
 
       - name: Upload JUnit test report
         uses: actions/upload-artifact@v2
@@ -42,20 +41,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Download JUnit report
-        uses: actions/download-artifact@v2
-        with:
-          name: junit-report
-          path: reports
-
-      - name: Install junit2html
+      - name: Download and convert JUnit report to HTML
         run: |
+          mkdir -p reports
           sudo apt-get update
           sudo apt-get install python3-pip
           pip3 install junit2html
-
-      - name: Convert JUnit XML to HTML
-        run: |
+          actions/download-artifact@v2 --name junit-report --path reports
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
 
       - name: Upload HTML report
@@ -64,26 +56,22 @@ jobs:
           name: html-report
           path: reports/junit.html
 
-      - name: HTML Preview
-        id: html_preview
-        uses: pavi2410/html-preview-action@v2
-        with:
-          html_file: 'reports/junit.html'
-
-      - name: Debug Output
-        run: echo "HTML Preview URL:${{ steps.html_preview.outputs.url }}"
+      - name: Commit HTML report to test branch
+        run: |
+          git checkout test
+          cp reports/junit.html .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add junit.html
+          git commit -m "Update HTML report"
+          git push origin test
 
       - name: Post HTML preview link as comment
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v2
         with:
-          github-token: ${{ secrets.TOKEN_GITHUB }}
-          script: |
-            const previewUrl = `{{ steps.html_preview.outputs.url }}`;
-            const comment = `🚀 [Preview HTML File](${previewUrl})`;
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: comment
-            });
+          token: ${{ secrets.TOKEN_GITHUB }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
