@@ -9,53 +9,25 @@ on:
       - main
 
 jobs:
-  pytest:
+  test-and-report:
     runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-
-      - name: Install dependencies
+      - name: Set up Python and install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Run tests
-        run: pytest --junitxml=reports/junit.xml
-
-      - name: Upload JUnit test report
-        uses: actions/upload-artifact@v2
-        with:
-          name: junit-report
-          path: reports/junit.xml
-
-  html-report:
-    runs-on: self-hosted
-    needs: pytest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Create reports directory and install dependencies
-        run: |
-          mkdir -p reports
           sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install junit2html
 
-      - name: Download JUnit report
-        uses: actions/download-artifact@v2
-        with:
-          name: junit-report
-          path: reports
-
-      - name: Convert JUnit XML to HTML
-        run: ~/.local/bin/junit2html reports/junit.xml reports/junit.html
+      - name: Run tests and convert report to HTML
+        run: |
+          pytest --junitxml=reports/junit.xml
+          mkdir -p reports
+          ~/.local/bin/junit2html reports/junit.xml reports/junit.html
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
