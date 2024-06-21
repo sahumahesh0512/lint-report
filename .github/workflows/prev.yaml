@@ -58,50 +58,29 @@ jobs:
         run: |
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
 
-      - name: Create Zip File
-        run: |
-          zip -j reports/html-report.zip reports/junit.html
-
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
           name: html-report
-          path: reports/html-report.zip
+          path: reports/junit.html
 
-      - name: Download HTML report artifact
-        uses: actions/download-artifact@v2
+      - name: HTML Preview
+        id: html_preview
+        uses: pavi2410/html-preview-action@v2
         with:
-          name: html-report
-          path: extracted-html-report
-
-      - name: List files for debugging
-        run: ls -R extracted-html-report
-
-      - name: Unzip HTML report
-        run: unzip extracted-html-report/html-report.zip -d extracted-html-report
-
-      - name: Checkout test
-        uses: actions/checkout@v2
-        with:
-          ref: test
-          path: test
-
-      - name: Copy HTML file to test
-        run: |
-          cp extracted-html-report/junit.html test/
-          cd test
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add junit.html
-          git commit -m "Update HTML report"
-          git push origin test
+          html_file: 'reports/junit.html'
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v2
+        uses: actions/github-script@v6
         with:
-          token: ${{ secrets.TOKEN_GITHUB }}
-          repository: ${{ github.repository }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            HTML preview is available [here](steps.html_preview.outputs.url)
+          github-token: ${{ secrets.TOKEN_GITHUB }}
+          script: |
+            const previewUrl = `{{ steps.html_preview.outputs.url }}`;
+            const comment = `🚀 [Preview HTML File](${previewUrl})`;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
