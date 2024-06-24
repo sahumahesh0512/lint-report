@@ -1,10 +1,15 @@
 name: CI Workflow
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  test-and-report:
+  pytest:
     runs-on: self-hosted
     steps:
       - name: Checkout code
@@ -15,30 +20,76 @@ jobs:
         with:
           python-version: '3.8'
 
-      - name: Install dependencies and tools
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install junit2html
 
-      - name: Run tests and convert report to HTML
+      - name: Run tests
         run: |
           pytest --junitxml=reports/junit.xml
-          mkdir -p reports
+
+      - name: Upload JUnit test report
+        uses: actions/upload-artifact@v2
+        with:
+          name: junit-report
+          path: reports/junit.xml
+
+  html-report:
+    runs-on: self-hosted
+    needs: pytest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download JUnit report
+        uses: actions/download-artifact@v2
+        with:
+          name: junit-report
+          path: reports
+
+      - name: Install junit2html
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3-pip
+          pip3 install junit2html
+
+      - name: Convert JUnit XML to HTML
+        run: |
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
+
+      - name: Create Zip File
+        run: |
+          zip -j reports/html-report.zip reports/junit.html
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
           name: html-report
-          path: reports/junit.html
+          path: reports/html-report.zip
 
-      - name: Commit HTML report to test branch
+      - name: Download HTML report artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: html-report
+          path: extracted-html-report
+
+      - name: List files for debugging
+        run: ls -R extracted-html-report
+
+      - name: Unzip HTML report
+        run: unzip extracted-html-report/html-report.zip -d extracted-html-report
+
+      - name: Checkout test branch
+        uses: actions/checkout@v2
+        with:
+          ref: test
+          path: test-branch
+
+      - name: Copy HTML file to test branch
         run: |
-          git checkout test
-          cp reports/junit.html .
+          cp extracted-html-report/junit.html test-branch/
+          cd test-branch
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add junit.html
@@ -53,4 +104,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
+            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/test/junit.html)
