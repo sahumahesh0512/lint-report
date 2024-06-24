@@ -55,7 +55,8 @@ jobs:
       - name: Get repository and branch info
         id: repo-info
         run: |
-          echo "::set-output name=repo_url::$(echo https://github.com/${{ github.repository }}/blob/test/junit.html)"
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          echo "::set-output name=pages_url::https://${{ github.actor }}.github.io/${REPO_NAME}/junit.html"
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
@@ -65,4 +66,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](${{ steps.repo-info.outputs.repo_url }})
+            HTML preview is available [here](${{ steps.repo-info.outputs.pages_url }})
