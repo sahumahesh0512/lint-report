@@ -1,6 +1,5 @@
 name: CI Workflow
 
-
 on:
   push:
     branches:
@@ -25,11 +24,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
+          
       - name: Run tests
         run: |
           pytest --junitxml=reports/junit.xml
-
+          
       - name: Upload JUnit test report
         uses: actions/upload-artifact@v2
         with:
@@ -54,15 +53,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install python3-pip
           pip3 install junit2html
-
+          
       - name: Convert JUnit XML to HTML
         run: |
           ~/.local/bin/junit2html reports/junit.xml reports/junit.html
-
+          
       - name: Create Zip File
         run: |
           zip -j reports/html-report.zip reports/junit.html
-
+          
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
@@ -100,8 +99,7 @@ jobs:
       - name: Get repository and branch info
         id: repo-info
         run: |
-          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-          echo "::set-output name=pages_url::https://${{ github.actor }}.github.io/${REPO_NAME}/junit.html"
+          echo "pages_url=https://${{ github.actor }}.github.io/${{ github.repository }}/junit.html" >> $GITHUB_ENV
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
@@ -111,4 +109,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](${{ steps.repo-info.outputs.pages_url }})
+            HTML preview is available [here](${env.pages_url})
