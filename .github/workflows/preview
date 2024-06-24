@@ -1,13 +1,7 @@
 name: Preview HTML
 
 on:
-  push:
-    branches:
-      - htmlpreview
-  pull_request:
-    branches:
-      - htmlpreview
-
+  
 jobs:
   generate-and-preview-html:
     runs-on: self-hosted
