@@ -2,13 +2,7 @@ name: CI Workflow
 
 
 on:
-  push:
-    branches:
-      - test
-  pull_request:
-    branches:
-      - main
-
+ 
 jobs:
   test-and-report:
     runs-on: self-hosted
