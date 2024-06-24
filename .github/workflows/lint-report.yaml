@@ -42,7 +42,8 @@ jobs:
 
       - name: Commit HTML report to test branch
         run: |
-          git checkout test
+          git fetch origin
+          git checkout -B test origin/test
           cp reports/junit.html .
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
