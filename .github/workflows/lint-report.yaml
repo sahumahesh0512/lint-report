@@ -24,7 +24,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          sudo apt-get update
           sudo apt-get install -y python3-pip
           pip3 install junit2html
 
@@ -42,15 +41,8 @@ jobs:
 
       - name: Commit HTML report to test branch
         run: |
-          git fetch origin
-          git checkout -B test origin/test
-          cp reports/junit.html .
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add junit.html
-          git commit -m "Update HTML report"
-          git pull --rebase origin test
-          git push origin test
+          chmod +x commit_html_report.sh
+          ./commit_html_report.sh
 
       - name: Get repository and branch info
         id: repo-info
