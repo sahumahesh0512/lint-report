@@ -1,12 +1,7 @@
 name: CI Workflow
 
 on:
-  push:
-    branches:
-      - test
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   test-and-report:
