@@ -48,6 +48,7 @@ jobs:
           git config --local user.name "GitHub Action"
           git add junit.html
           git commit -m "Update HTML report"
+          git pull --rebase origin test
           git push origin test
 
       - name: Get repository and branch info
