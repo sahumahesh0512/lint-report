@@ -3,7 +3,7 @@ const { htmlToMarkdown } = require('html-to-markdown');
 
 async function run() {
   try {
-    const htmlFilePath = './lint-report/junit.html'; // Adjusted path to the HTML file
+    const htmlFilePath = './junit.html'; // Path to the HTML file in the root directory
     const htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
     // Convert HTML to markdown
