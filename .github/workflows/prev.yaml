@@ -32,32 +32,16 @@ jobs:
 
       run: pip install -r requirements.txt
  
-    - name: Run tests and capture output
+    - name: Run tests and generate HTML report
       id: run_tests
-      run: |        
-        pytest > test_output.txt         
-        cat test_output.txt
-
-    - name: Generate job summary
-
-      if: always()
-
       run: |
-
-        echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
-
-        echo '<html>' >> $GITHUB_STEP_SUMMARY
-
-        echo '<body>' >> $GITHUB_STEP_SUMMARY
-
+        pytest --html=report.html --self-contained-html
+ 
+    - name: Display HTML report in job summary
+      if: always()
+      run: |
+        echo "### Test Report" >> $GITHUB_STEP_SUMMARY
         echo '<h2>Test Results</h2>' >> $GITHUB_STEP_SUMMARY
-
         echo '<pre>' >> $GITHUB_STEP_SUMMARY
-
-        cat test_output.txt >> $GITHUB_STEP_SUMMARY
-
+        cat report.html >> $GITHUB_STEP_SUMMARY
         echo '</pre>' >> $GITHUB_STEP_SUMMARY
-
-        echo '</body>' >> $GITHUB_STEP_SUMMARY
-
-        echo '</html>' >> $GITHUB_STEP_SUMMARY
