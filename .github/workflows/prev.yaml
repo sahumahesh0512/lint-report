@@ -33,15 +33,11 @@ jobs:
       run: pip install -r requirements.txt
  
     - name: Run tests and capture output
-
       id: run_tests
-
-      run: |
-
-        python -m unittest discover > test_output.txt
-
+      run: |        
+        pytest > test_output.txt         
         cat test_output.txt
- 
+
     - name: Generate job summary
 
       if: always()
