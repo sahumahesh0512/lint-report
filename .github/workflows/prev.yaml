@@ -36,7 +36,11 @@ jobs:
       id: run_tests
       run: |
         pytest --html=report.html --self-contained-html
- 
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v2
+      with:
+          name: pytest-report
+          path: report.html
     - name: Display HTML report in job summary
       if: always()
       run: |
