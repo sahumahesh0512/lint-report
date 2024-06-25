@@ -8,7 +8,6 @@ on:
     branches:
       - main
 
-
 jobs:
   test-and-summary:
     runs-on: self-hosted
@@ -26,22 +25,19 @@ jobs:
       
     - name: Run tests and generate HTML report
       id: run_tests
-      run: pytest --html=report.html
+      run: |
+        pytest --html=report.html
         
     - name: Upload HTML Report
       uses: actions/upload-artifact@v2
       with:
         name: html-report
         path: report.html  
-
-    - name: Read HTML Report
-      id: read_html
-      run: |
-        report=$(cat report.html)
-        echo "::set-output name=report::$report"
-        
+      
     - name: Generate job summary
       if: always()
       run: |
         echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
-        echo "${{ steps.read_html.outputs.report }}" >> $GITHUB_STEP_SUMMARY
+        echo '<details><summary>Test Results</summary>' >> $GITHUB_STEP_SUMMARY
+        echo '<iframe src="data:text/html;base64,'$(base64 -w 0 report.html)'" width="100%" height="500px"></iframe>' >> $GITHUB_STEP_SUMMARY
+        echo '</details>' >> $GITHUB_STEP_SUMMARY
