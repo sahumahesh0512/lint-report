@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { htmlToMarkdown } = require('html-to-markdown');
+const { htmlToText } = require('html-to-text');
 
 async function run() {
   try {
@@ -7,7 +7,9 @@ async function run() {
     const htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
 
     // Convert HTML to markdown
-    const markdownContent = htmlToMarkdown(htmlContent);
+    const markdownContent = htmlToText(htmlContent, {
+      wordwrap: 130
+    });
 
     const jobSummary = `
       ### Job Summary
