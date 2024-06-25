@@ -22,11 +22,14 @@ jobs:
         
     - name: Install dependencies
       run: pip install -r requirements.txt
+
+    - name: Install jq
+      run: sudo apt-get install jq
       
-    - name: Run tests and generate HTML report
+    - name: Run tests and generate reports
       id: run_tests
       run: |
-        pytest --html=report.html
+        pytest --json-report --json-report-file=report.json --html=report.html
         
     - name: Upload HTML Report
       uses: actions/upload-artifact@v2
@@ -38,6 +41,22 @@ jobs:
       if: always()
       run: |
         echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
-        echo '<details><summary>Test Results</summary>' >> $GITHUB_STEP_SUMMARY
-        echo '<iframe src="data:text/html;base64,'$(base64 -w 0 report.html)'" width="100%" height="500px"></iframe>' >> $GITHUB_STEP_SUMMARY
-        echo '</details>' >> $GITHUB_STEP_SUMMARY
+
+        echo "<h2>Test Results</h2>" >> $GITHUB_STEP_SUMMARY
+
+        RESULTS=$(cat report.json | jq '.summary')
+        TESTS_TOTAL=$(echo $RESULTS | jq '.total')
+        TESTS_SKIPPED=$(echo $RESULTS | jq '.skipped')
+        TESTS_FAILED=$(echo $RESULTS | jq '.failed')
+        TESTS_PASSED=$(echo $RESULTS | jq '.passed')
+        TESTS_ERRORS=$(echo $RESULTS | jq '.errors')
+        TESTS_DURATION=$(echo $RESULTS | jq '.duration')
+
+        echo "<table>" >> $GITHUB_STEP_SUMMARY
+        echo "<tr><th>Tests</th><th>Skipped</th><th>Failed</th><th>Passed</th><th>Error</th><th>Time</th></tr>" >> $GITHUB_STEP_SUMMARY
+        echo "<tr><td>${TESTS_TOTAL}</td><td>${TESTS_SKIPPED}</td><td>${TESTS_FAILED}</td><td>${TESTS_PASSED}</td><td>${TESTS_ERRORS}</td><td>${TESTS_DURATION} sec</td></tr>" >> $GITHUB_STEP_SUMMARY
+        echo "</table>" >> $GITHUB_STEP_SUMMARY
+
+        echo "<a href='${{ steps.upload_artifacts.outputs.download_url }}'>View the detailed test report</a>" >> $GITHUB_STEP_SUMMARY
+
+    
