@@ -1,6 +1,5 @@
 name: Run Tests and Generate Job Summary
 
-
 on:
   push:
     branches:
@@ -10,39 +9,39 @@ on:
       - main
 
 
-
 jobs:
   test-and-summary:
     runs-on: self-hosted
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-      
+           
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
         
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest pytest-html
+      run: pip install -r requirements.txt
       
     - name: Run tests and generate HTML report
       id: run_tests
-      run: |
-        pytest --html=report.html
+      run: pytest --html=report.html
         
     - name: Upload HTML Report
       uses: actions/upload-artifact@v2
       with:
         name: html-report
-        path: report.html
+        path: report.html  
 
-    - name: Display HTML Report in Job Summary
-      uses: actions/github-script@v4
-      with:
-        script: |
-          const fs = require('fs');
-          const htmlReport = fs.readFileSync('report.html', 'utf8');
-          console.log(`::set-output name=summary::${htmlReport}`);
+    - name: Read HTML Report
+      id: read_html
+      run: |
+        report=$(cat report.html)
+        echo "::set-output name=report::$report"
+        
+    - name: Generate job summary
+      if: always()
+      run: |
+        echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.read_html.outputs.report }}" >> $GITHUB_STEP_SUMMARY
