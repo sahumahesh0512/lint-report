@@ -62,14 +62,16 @@ jobs:
         run: |
           ~/.local/bin/junit2html reports/junit.xml test/junit.html
 
-      - name: Commit and push HTML file to test
+      - name: Commit HTML report to test branch
         run: |
-          cd test
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add junit.html
-          git commit -m "Update HTML report" || echo "No changes to commit"
-          git push origin test
+          chmod +x commit_html_report.sh
+          ./commit_html_report.sh
+
+      - name: Get repository and branch info
+        id: repo-info
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          echo "::set-output name=pages_url::https://${{ github.actor }}.github.io/${REPO_NAME}/junit.html"
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
@@ -79,4 +81,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
+            HTML preview is available [here](${{ steps.repo-info.outputs.pages_url }})
