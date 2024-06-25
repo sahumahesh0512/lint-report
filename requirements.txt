@@ -3,4 +3,4 @@ pytest-cov
 junit2html
 pytest-html
 pytest-json-report
-jq
+
