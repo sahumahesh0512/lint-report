@@ -2,8 +2,12 @@ name: Run Tests and Generate Job Summary
 
 
 on:
+  push:
+    branches:
+      - test
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
 
 jobs:
   test-and-summary:
