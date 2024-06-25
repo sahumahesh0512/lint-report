@@ -8,6 +8,7 @@ on:
     branches:
       - main
 
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,17 +37,21 @@ jobs:
           echo "Metric1: 95%" >> $GITHUB_STEP_SUMMARY
           echo "Metric2: 80%" >> $GITHUB_STEP_SUMMARY
 
-      # Upload detailed results and metrics as artifacts
-      - name: Upload test results
+      # Create detailed results file
+      - name: Create detailed results file
         run: |
           echo "Test1: PASS" > results.txt
           echo "Test2: FAIL" >> results.txt
           echo "Test3: PASS" >> results.txt
           echo "Metric1: 95%" > metrics.txt
           echo "Metric2: 80%" >> metrics.txt
+
+      # Upload detailed results and metrics as artifacts
+      - name: Upload test results
         uses: actions/upload-artifact@v2
         with:
           name: detailed-results
           path: |
             results.txt
             metrics.txt
+
