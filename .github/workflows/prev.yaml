@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       # Checkout code
@@ -16,35 +16,31 @@ jobs:
         run: |
           echo "Running tests..."
           # Simulate test results
-          echo "Test1: PASS" > results.txt
-          echo "Test2: FAIL" >> results.txt
-          echo "Test3: PASS" >> results.txt
+          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "Test1: PASS" >> $GITHUB_STEP_SUMMARY
+          echo "Test2: FAIL" >> $GITHUB_STEP_SUMMARY
+          echo "Test3: PASS" >> $GITHUB_STEP_SUMMARY
 
       # Gather metrics
       - name: Gather metrics
         run: |
           echo "Gathering metrics..."
           # Simulate metrics
+          echo "### Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "Metric1: 95%" >> $GITHUB_STEP_SUMMARY
+          echo "Metric2: 80%" >> $GITHUB_STEP_SUMMARY
+
+      # Upload detailed results and metrics as artifacts
+      - name: Upload test results
+        run: |
+          echo "Test1: PASS" > results.txt
+          echo "Test2: FAIL" >> results.txt
+          echo "Test3: PASS" >> results.txt
           echo "Metric1: 95%" > metrics.txt
           echo "Metric2: 80%" >> metrics.txt
-
-      # Combine results and metrics
-      - name: Combine results and metrics
-        run: |
-          cat results.txt metrics.txt > summary.txt
-
-      # Display custom summary information
-      - name: Display summary
-        run: |
-          cat summary.txt
-          while IFS= read -r line
-          do
-            echo "::notice::$line"
-          done < summary.txt
-
-      # Upload results and metrics as artifacts
-      - name: Upload summary
         uses: actions/upload-artifact@v2
         with:
-          name: summary
-          path: summary.txt
+          name: detailed-results
+          path: |
+            results.txt
+            metrics.txt
