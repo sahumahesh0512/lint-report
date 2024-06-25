@@ -23,4 +23,4 @@ jobs:
       run: npm install html-to-markdown
 
     - name: Convert HTML to Markdown and Include in Job Summary
-      run: node lint-report/convert_html_to_markdown.js # Adjusted path to the script
+      run: node convert_html_to_markdown.js # Corrected path to the script in the root directory
