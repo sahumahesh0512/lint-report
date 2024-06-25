@@ -38,13 +38,13 @@ jobs:
           echo "Metric2: 80%" >> $GITHUB_STEP_SUMMARY
 
       # Create detailed results file
-      - name: Create detailed results file
-        run: |
-          echo "Test1: PASS" > results.txt
-          echo "Test2: FAIL" >> results.txt
-          echo "Test3: PASS" >> results.txt
-          echo "Metric1: 95%" > metrics.txt
-          echo "Metric2: 80%" >> metrics.txt
+     # - name: Create detailed results file
+      #  run: |
+       #   echo "Test1: PASS" > results.txt
+        #  echo "Test2: FAIL" >> results.txt
+         # echo "Test3: PASS" >> results.txt
+          #echo "Metric1: 95%" > metrics.txt
+          #echo "Metric2: 80%" >> metrics.txt
 
       # Upload detailed results and metrics as artifacts
       - name: Upload test results
