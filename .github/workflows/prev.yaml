@@ -1,4 +1,4 @@
-name: Run Tests and Generate Job Summary
+name: CI Workflow
 
 on:
   push:
@@ -9,49 +9,99 @@ on:
       - main
 
 jobs:
-  test-and-summary:
+  pytest:
     runs-on: self-hosted
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-           
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-        
-    - name: Install dependencies
-      run: pip install -r requirements.txt
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install jq
-      run: sudo apt-get install jq
-      
-    - name: Run tests and generate reports
-      id: run_tests
-      run: |
-        pytest --json-report --json-report-file=report.json --html=report.html
-        
-    - name: Upload HTML Report
-      uses: actions/upload-artifact@v2
-      with:
-        name: html-report
-        path: report.html  
-      
-    - name: Generate job summary
-      if: always()
-      run: |
-        echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
-        echo "<h2>Test Results</h2>" >> $GITHUB_STEP_SUMMARY
-        RESULTS=$(cat report.json | jq '.summary')
-        #TESTS_TOTAL=$(echo $RESULTS | jq '.total')
-        #TESTS_SKIPPED=$(echo $RESULTS | jq '.skipped')
-        #TESTS_FAILED=$(echo $RESULTS | jq '.failed')
-        #TESTS_PASSED=$(echo $RESULTS | jq '.passed')
-        #TESTS_ERRORS=$(echo $RESULTS | jq '.errors')
-        #TESTS_DURATION=$(echo $RESULTS | jq '.duration')
-        
-        echo "<table>" >> $GITHUB_STEP_SUMMARY
-        echo "<tr><th>Tests</th><th>Skipped</th><th>Failed</th><th>Passed</th><th>Error</th><th>Time</th></tr>" >> $GITHUB_STEP_SUMMARY
-        echo "<tr><td>${TESTS_TOTAL}</td><td>${TESTS_SKIPPED}</td><td>${TESTS_FAILED}</td><td>${TESTS_PASSED}</td><td>${TESTS_ERRORS}</td><td>${TESTS_DURATION} sec</td></tr>" >> $GITHUB_STEP_SUMMARY
-        echo "</table>" >> $GITHUB_STEP_SUMMARY
-        echo "<a href='${{ steps.upload_artifacts.outputs.download_url }}'>View the detailed test report</a>" >> $GITHUB_STEP_SUMMARY
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest --junitxml=reports/junit.xml
+
+      - name: Upload JUnit test report
+        uses: actions/upload-artifact@v2
+        with:
+          name: junit-report
+          path: reports/junit.xml
+
+  html-report:
+    runs-on: self-hosted
+    needs: pytest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download JUnit report
+        uses: actions/download-artifact@v2
+        with:
+          name: junit-report
+          path: reports
+
+      - name: Install junit2html
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3-pip
+          pip3 install junit2html
+
+      - name: Convert JUnit XML to HTML
+        run: |
+          ~/.local/bin/junit2html reports/junit.xml reports/junit.html
+
+      - name: Create Zip File
+        run: |
+          zip -j reports/html-report.zip reports/junit.html
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-report
+          path: reports/html-report.zip
+
+      - name: Download HTML report artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: html-report
+          path: extracted-html-report
+
+      - name: List files for debugging
+        run: ls -R extracted-html-report
+
+      - name: Unzip HTML report
+        run: unzip extracted-html-report/html-report.zip -d extracted-html-report
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copy HTML file to gh-pages
+        run: |
+          cp extracted-html-report/junit.html gh-pages/
+          cd gh-pages
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add junit.html
+          git commit -m "Update HTML report"
+          git push origin gh-pages
+
+      - name: Post HTML preview link as comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
