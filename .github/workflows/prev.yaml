@@ -18,9 +18,6 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '14'
-      
-    - name: Install Dependencies
-      run: npm install html-to-text
 
     - name: Convert HTML to Markdown and Include in Job Summary
       run: node convert_html_to_markdown.js # Corrected path to the script in the root directory
