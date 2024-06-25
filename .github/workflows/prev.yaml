@@ -1,4 +1,4 @@
-name: Complex Workflow Summary
+name: Run Tests and Generate Job Summary
 
 on:
   push:
@@ -8,50 +8,50 @@ on:
     branches:
       - main
 
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  test-and-summary:
+    runs-on: self-hosted
     steps:
-      # Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
+           
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+        
+    - name: Install dependencies
+      run: pip install -r requirements.txt
 
-      # Run tests and generate results
-      - name: Run tests
-        run: |
-          echo "Running tests..."
-          # Simulate test results
-          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "Test1: PASS" >> $GITHUB_STEP_SUMMARY
-          echo "Test2: FAIL" >> $GITHUB_STEP_SUMMARY
-          echo "Test3: PASS" >> $GITHUB_STEP_SUMMARY
-
-      # Gather metrics
-      - name: Gather metrics
-        run: |
-          echo "Gathering metrics..."
-          # Simulate metrics
-          echo "### Metrics" >> $GITHUB_STEP_SUMMARY
-          echo "Metric1: 95%" >> $GITHUB_STEP_SUMMARY
-          echo "Metric2: 80%" >> $GITHUB_STEP_SUMMARY
-
-      # Create detailed results file
-     # - name: Create detailed results file
-      #  run: |
-       #   echo "Test1: PASS" > results.txt
-        #  echo "Test2: FAIL" >> results.txt
-         # echo "Test3: PASS" >> results.txt
-          #echo "Metric1: 95%" > metrics.txt
-          #echo "Metric2: 80%" >> metrics.txt
-
-      # Upload detailed results and metrics as artifacts
-      - name: Upload test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: detailed-results
-          path: |
-            results.txt
-            metrics.txt
-
+    - name: Install jq
+      run: sudo apt-get install jq
+      
+    - name: Run tests and generate reports
+      id: run_tests
+      run: |
+        pytest --json-report --json-report-file=report.json --html=report.html
+        
+    - name: Upload HTML Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: html-report
+        path: report.html  
+      
+    - name: Generate job summary
+      if: always()
+      run: |
+        echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
+        echo "<h2>Test Results</h2>" >> $GITHUB_STEP_SUMMARY
+        RESULTS=$(cat report.json | jq '.summary')
+        #TESTS_TOTAL=$(echo $RESULTS | jq '.total')
+        #TESTS_SKIPPED=$(echo $RESULTS | jq '.skipped')
+        #TESTS_FAILED=$(echo $RESULTS | jq '.failed')
+        #TESTS_PASSED=$(echo $RESULTS | jq '.passed')
+        #TESTS_ERRORS=$(echo $RESULTS | jq '.errors')
+        #TESTS_DURATION=$(echo $RESULTS | jq '.duration')
+        
+        echo "<table>" >> $GITHUB_STEP_SUMMARY
+        echo "<tr><th>Tests</th><th>Skipped</th><th>Failed</th><th>Passed</th><th>Error</th><th>Time</th></tr>" >> $GITHUB_STEP_SUMMARY
+        echo "<tr><td>${TESTS_TOTAL}</td><td>${TESTS_SKIPPED}</td><td>${TESTS_FAILED}</td><td>${TESTS_PASSED}</td><td>${TESTS_ERRORS}</td><td>${TESTS_DURATION} sec</td></tr>" >> $GITHUB_STEP_SUMMARY
+        echo "</table>" >> $GITHUB_STEP_SUMMARY
+        echo "<a href='${{ steps.upload_artifacts.outputs.download_url }}'>View the detailed test report</a>" >> $GITHUB_STEP_SUMMARY
