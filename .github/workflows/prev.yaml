@@ -9,73 +9,59 @@ on:
       - main
 
 jobs:
-  pytest:
+
+  test-and-summary:
+
     runs-on: self-hosted
+ 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
+    - name: Checkout code
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      uses: actions/checkout@v2
+ 
+    - name: Set up Python
 
-      - name: Run tests
-        run: |
-          pytest --junitxml=reports/junit.xml
+      uses: actions/setup-python@v2
 
-      - name: Upload JUnit test report
-        uses: actions/upload-artifact@v2
-        with:
-          name: junit-report
-          path: reports/junit.xml
+      with:
 
-  html-report:
-    runs-on: self-hosted
-    needs: pytest
-    steps:
-      - name: Checkout gh-pages
-        uses: actions/checkout@v2
-        with:
-          ref: gh-pages
-          path: gh-pages
+        python-version: '3.8'
+ 
+    - name: Install dependencies
 
-      - name: Download JUnit report
-        uses: actions/download-artifact@v2
-        with:
-          name: junit-report
-          path: reports
+      run: pip install -r requirements.txt
+ 
+    - name: Run tests and capture output
 
-      - name: Install junit2html
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip
-          pip3 install junit2html
+      id: run_tests
 
-      - name: Convert JUnit XML to HTML
-        run: |
-          ~/.local/bin/junit2html reports/junit.xml gh-pages/junit.html
+      run: |
 
-      - name: Commit and push HTML file to gh-pages
-        run: |
-          cd gh-pages
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add junit.html
-          git commit -m "Update HTML report" || echo "No changes to commit"
-          git push origin gh-pages
+        python -m unittest discover > test_output.txt
 
-      - name: Post HTML preview link as comment
-        if: github.event_name == 'pull_request'
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          token: ${{ secrets.TOKEN_GITHUB }}
-          repository: ${{ github.repository }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
+        cat test_output.txt
+ 
+    - name: Generate job summary
+
+      if: always()
+
+      run: |
+
+        echo "### Job Summary" >> $GITHUB_STEP_SUMMARY
+
+        echo '<html>' >> $GITHUB_STEP_SUMMARY
+
+        echo '<body>' >> $GITHUB_STEP_SUMMARY
+
+        echo '<h2>Test Results</h2>' >> $GITHUB_STEP_SUMMARY
+
+        echo '<pre>' >> $GITHUB_STEP_SUMMARY
+
+        cat test_output.txt >> $GITHUB_STEP_SUMMARY
+
+        echo '</pre>' >> $GITHUB_STEP_SUMMARY
+
+        echo '</body>' >> $GITHUB_STEP_SUMMARY
+
+        echo '</html>' >> $GITHUB_STEP_SUMMARY
