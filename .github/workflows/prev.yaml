@@ -59,7 +59,7 @@ jobs:
 
       - name: Convert JUnit XML to HTML
         run: |
-          ~/.local/bin/junit2html reports/junit.xml gh-pages/junit.html
+          ~/.local/bin/junit2html reports/junit.xml test/junit.html
 
       - name: Commit and push HTML file to test
         run: |
