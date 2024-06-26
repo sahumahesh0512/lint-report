@@ -1,11 +1,4 @@
-#test_math_operations.py	  
-def add(a,b):
-    return a+b
- 
-def subtract(a, b):
-    return a - b
-
-test_math_operations.py	
+#test_math_operations.py	
 import unittest
 from src.math_operations import add, subtract
  
