@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -27,14 +27,18 @@ jobs:
 
       - name: Run tests and capture results
         run: |
-          pytest --junitxml=results.xml
+          pytest --junitxml=test/results/TEST-results.xml
 
-      - name: Display test results in job summary
-        run: |
-          echo '### Unit Test Results' >> $GITHUB_STEP_SUMMARY
-          echo '<details>' >> $GITHUB_STEP_SUMMARY
-          echo '<summary>Click to expand</summary>' >> $GITHUB_STEP_SUMMARY
-          echo '<pre>' >> $GITHUB_STEP_SUMMARY
-          cat results.xml >> $GITHUB_STEP_SUMMARY
-          echo '</pre>' >> $GITHUB_STEP_SUMMARY
-          echo '</details>'
+      - name: Test Summary
+        uses: test-summary/action@v2
+        with:
+          paths: "test/results/TEST-results.xml"
+          output: test-summary.md
+        if: always()
+
+      - name: Upload test summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-summary
+          path: test-summary.md
+        if: always()
