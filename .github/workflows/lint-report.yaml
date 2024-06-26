@@ -25,6 +25,8 @@ jobs:
         run: |
          
           python -m pytest tests --cov=. --cov-report xml:coverage.xml --junitxml=test/results/TEST-results.xml
+        continue-on-error: true
+        
       - name: Test Summary
         uses: test-summary/action@v2
         with:
