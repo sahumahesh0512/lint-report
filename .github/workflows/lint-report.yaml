@@ -93,7 +93,7 @@ jobs:
         run: |
           git fetch origin
           git checkout -B test origin/test
-          cp public/artifact.html .
+          cp reports/junit.html .
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add artifact.html 
