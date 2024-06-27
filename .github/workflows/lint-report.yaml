@@ -114,4 +114,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](${{ steps.html_preview.outputs.url }})
+            HTML preview is available [here](${{ steps.repo-info.outputs.pages_url }})
