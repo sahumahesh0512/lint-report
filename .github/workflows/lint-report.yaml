@@ -89,16 +89,17 @@ jobs:
           ref: test
           path: test
 
-      - name: Copy HTML file to test
+      - name: Commit HTML report to test branch
         run: |
-          cp extracted-html-report/junit.html test/
-          cd test
+          git fetch origin
+          git checkout -B test origin/test
+          cp public/artifact.html .
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add junit.html
+          git add artifact.html 
           git commit -m "Update HTML report"
+          git pull --rebase origin test
           git push origin test
-
       - name: Get repository and branch info
         id: repo-info
         run: |
@@ -113,4 +114,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](${{ steps.repo-info.outputs.pages_url }})
+            HTML preview is available [here](${{ steps.html_preview.outputs.url }})
