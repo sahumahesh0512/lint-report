@@ -1,8 +1,13 @@
 name: CI Workflow
 
+
 on:
-  workflow_dispatch:
- 
+  push:
+    branches:
+      - test
+  pull_request:
+    branches:
+      - main
 
 jobs:
   pytest:
@@ -14,63 +19,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'  # Specify the Python version you need
+          python-version: '3.8'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
-        id: run-tests
+      - name: Run tests and capture results
         run: |
-          pytest --junitxml=reports/junit.xml --tb=short
-          pytest --junitxml=reports/junit.xml --tb=short --maxfail=1 || echo "Test failed"
+         
+          python -m pytest tests --cov=. --cov-report xml:coverage.xml --junitxml=reports/junit.xml
+        continue-on-error: true
 
       - name: Upload JUnit test report
         uses: actions/upload-artifact@v2
         with:
           name: junit-report
           path: reports/junit.xml
-
-      - name: Convert JUnit XML to HTML
-        run: |
-          pip install junit2html
-          junit2html reports/junit.xml reports/junit.html
-
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v2
-        with:
-          name: html-report
-          path: reports/junit.html
-
-      - name: Generate Test Summary
-        id: generate-test-summary
-        run: |
-          echo "## Test Results Summary" > results-summary.md
-          echo "| Test File | Result |" >> results-summary.md
-          echo "| --------- | ------ |" >> results-summary.md
-          pytest --tb=short --maxfail=1 --junitxml=results-summary.md
-          cat results-summary.md
-
-      - name: Determine if Pull Request
-        id: get-context
-        run: echo "::set-output name=is_pr::${{ github.event_name == 'pull_request' }}"
-
-      - name: Post Test Summary as a Comment
-        if: steps.get-context.outputs.is_pr == 'true'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const summary = fs.readFileSync('results-summary.md', 'utf8');
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-              body: summary
-            })
 
   html-report:
     runs-on: self-hosted
@@ -83,26 +49,69 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: junit-report
-          path: reports 
+          path: reports
 
       - name: Install junit2html
         run: |
-          sudo apt-get update
-          sudo apt-get install python3-pip  # Install pip for Python 3
+          
+          sudo apt-get install python3-pip
           pip3 install junit2html
 
       - name: Convert JUnit XML to HTML
         run: |
-          junit2html reports/junit.xml reports/junit.html
+          ~/.local/bin/junit2html reports/junit.xml reports/junit.html
+
+      - name: Create Zip File
+        run: |
+          zip -j reports/html-report.zip reports/junit.html
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v2
         with:
           name: html-report
-          path: reports/junit.html
+          path: reports/html-report.zip
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Download HTML report artifact
+        uses: actions/download-artifact@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./reports
+          name: html-report
+          path: extracted-html-report
+
+      - name: List files for debugging
+        run: ls -R extracted-html-report
+
+      - name: Unzip HTML report
+        run: unzip extracted-html-report/html-report.zip -d extracted-html-report
+
+      - name: Checkout test
+        uses: actions/checkout@v2
+        with:
+          ref: test
+          path: test
+
+      - name: Commit HTML report to test branch
+        run: |
+          git fetch origin
+          git checkout -B test origin/test
+          cp reports/junit.html .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add junit.html
+          git commit -m "Update HTML report"
+          git pull --rebase origin test
+          git push origin test
+      - name: Get repository and branch info
+        id: repo-info
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          echo "::set-output name=pages_url::https://${{ github.actor }}.github.io/${REPO_NAME}/junit.html"
+
+      - name: Post HTML preview link as comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            HTML preview is available [here](${{ steps.repo-info.outputs.pages_url }})
