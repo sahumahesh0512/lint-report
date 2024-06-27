@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest src --junitxml=reports/junit.xml
+          python -m pytest tests--junitxml=reports/junit.xml
 
       - name: Upload JUnit test report
         uses: actions/upload-artifact@v2
