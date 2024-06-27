@@ -99,6 +99,12 @@ jobs:
           git commit -m "Update HTML report"
           git push origin test
 
+      - name: Get repository and branch info
+        id: repo-info
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          echo "::set-output name=pages_url::https://${{ github.actor }}.github.io/${REPO_NAME}/junit.html"
+
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v2
@@ -107,4 +113,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
+            HTML preview is available [here](${{ steps.repo-info.outputs.pages_url }})
