@@ -83,21 +83,21 @@ jobs:
       - name: Unzip HTML report
         run: unzip extracted-html-report/html-report.zip -d extracted-html-report
 
-      - name: Checkout gh-pages
+      - name: Checkout test
         uses: actions/checkout@v2
         with:
-          ref: gh-pages
-          path: gh-pages
+          ref: test
+          path: test
 
-      - name: Copy HTML file to gh-pages
+      - name: Copy HTML file to test
         run: |
-          cp extracted-html-report/junit.html gh-pages/
-          cd gh-pages
+          cp extracted-html-report/junit.html test/
+          cd test
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add junit.html
           git commit -m "Update HTML report"
-          git push origin gh-pages
+          git push origin test
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
