@@ -2,7 +2,7 @@
  
 import pytest
 
-from example import add, subtract
+from src.example import add, subtract
  
 def test_add():
 
