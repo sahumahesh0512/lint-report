@@ -52,7 +52,7 @@ jobs:
 
       - name: Install junit2html
         run: |
-          sudo apt-get update
+          
           sudo apt-get install python3-pip
           pip3 install junit2html
 
