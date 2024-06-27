@@ -96,7 +96,7 @@ jobs:
           cp reports/junit.html .
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add artifact.html 
+          git add junit.html
           git commit -m "Update HTML report"
           git pull --rebase origin test
           git push origin test
