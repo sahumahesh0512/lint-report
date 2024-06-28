@@ -1,18 +1,18 @@
 #test_math_operations.py	
 import unittest
-from src.math_operations import add, subtract
+from src.math_operations import mul, div
  
 class TestMathOperations(unittest. TestCase):
-    def test_add (self):
-        self.assertEqual(add(1,2),3)
-        self.assertEqual(add(-1, 1), 0)
-        self.assertEqual(add(-1,-1), -3)
+    def test_mul (self):
+        self.assertEqual(mul(1,2),3)
+        self.assertEqual(mul(-1, 1), 0)
+        self.assertEqual(mul(-1,-1), -3)
  
         
-    def test_subtract(self):
-        self.assertEqual(subtract(2,1), 1)
-        self.assertEqual(subtract(-1, -1), 0)
-        self.assertEqual(subtract(1,1), 0)
+    def test_div(self):
+        self.assertEqual(div(2,1), 1)
+        self.assertEqual(div(-1, -1), 0)
+        self.assertEqual(div(1,1), 0)
  
 if __name__ == '__main__':  
    unittest.main()
