@@ -1,4 +1,4 @@
-name: Generate and Preview HTML Report
+name: html
 
 on:
   pull_request:
