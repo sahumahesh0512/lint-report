@@ -1,4 +1,4 @@
-name: Generate and Preview HTML Report
+name: html
 
 on:
   pull_request:
@@ -33,8 +33,18 @@ jobs:
         name: coverage-report
         path: htmlcov/
  
-    - name: Preview coverage report
-      uses: martinsson/preview-artifact@v1
+    - name: Generate Preview Link
+      id: create-link
+      uses: actions/github-script@v4
       with:
-        name: coverage-report
-        path: htmlcov/index.html
+        script: |
+          const artifactId = context.runId;
+          const repo = context.repo.repo;
+          const owner = context.repo.owner;
+          const htmlPath = 'htmlcov/index.html';
+          const previewUrl = `https://github.com/${owner}/${repo}/suites/${artifactId}/artifacts/${htmlPath}`;
+          core.setOutput("preview_url", previewUrl);
+ 
+    - name: Print Preview Link
+      run: echo "Preview URL:${{ steps.create-link.outputs.preview_url }}"
+      if: always()
