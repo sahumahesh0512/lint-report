@@ -28,7 +28,7 @@ jobs:
  
     - name: Run unit tests and generate coverage report
       run: |
-        pytest --cov=my_package --cov-report html
+        pytest --cov=my_package --cov-report htmlcov
       continue-on-error: true
  
     - name: Upload coverage report as artifact
