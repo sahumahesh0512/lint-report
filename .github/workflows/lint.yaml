@@ -1,4 +1,4 @@
-name: html
+name: CI Workflow
 
 on:
   push:
@@ -7,48 +7,63 @@ on:
   pull_request:
     branches:
       - main
- 
+
 jobs:
-  build:
+  test-and-report:
     runs-on: self-hosted
- 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
- 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
- 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
- 
-    - name: Run unit tests and generate coverage report
-      run: |
-        pytest --cov=my_package --cov-report html
-      continue-on-error: true
- 
-    - name: Upload coverage report as artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage-report
-        path: htmlcov/
- 
-    - name: Generate Preview Link
-      id: create-link
-      uses: actions/github-script@v4
-      with:
-        script: |
-          const artifactId = context.runId;
-          const repo = context.repo.repo;
-          const owner = context.repo.owner;
-          const htmlPath = 'htmlcov/index.html';
-          const previewUrl = `https://github.com/${owner}/${repo}/suites/${artifactId}/artifacts/${htmlPath}`;
-          core.setOutput("preview_url", previewUrl);
- 
-    - name: Print Preview Link
-      run: echo "Preview URL:${{ steps.create-link.outputs.preview_url }}"
-      if: always()
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies and tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest-html  # Add pytest-html for HTML report generation
+
+      - name: Run tests
+        run: |
+          mkdir -p reports
+          python -m pytest tests --cov=. --cov-report html:reports/coverage  --html=reports/test-report.html
+        continue-on-error: true
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-report
+          path: reports/test-report.html
+
+      - name: Download HTML report artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: html-report
+          path: extracted-html-report
+
+      - name: Checkout 1-test
+        uses: actions/checkout@v2
+        with:
+          ref: 1-test
+          path: 1-test
+
+      - name: Commit HTML report to 1-test branch
+        run: |
+          cp extracted-html-report/test-report.html 1-test/
+          cd 1-test
+          git add test-report.html
+          git commit -m "Add test report"
+          git push origin 1-test
+
+      - name: Post HTML preview link as comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.TOKEN_GITHUB }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
