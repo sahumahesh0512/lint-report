@@ -52,7 +52,7 @@ jobs:
 
       - name: Commit HTML report to 1-test branch
         run: |
-          chmod +x html_report.sh
+          chmod +x html-report.sh
           ./html-report.sh
 
       - name: Post HTML preview link as comment
