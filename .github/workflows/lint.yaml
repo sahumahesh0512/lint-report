@@ -52,11 +52,8 @@ jobs:
 
       - name: Commit HTML report to 1-test branch
         run: |
-          cp extracted-html-report/test-report.html 1-test/
-          cd 1-test
-          git add test-report.html
-          git commit -m "Add test report"
-          git push origin 1-test
+          chmod +x html_report.sh
+          ./html_report.sh
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
@@ -66,4 +63,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/test-report.html)
+            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
