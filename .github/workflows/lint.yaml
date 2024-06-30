@@ -66,4 +66,4 @@ jobs:
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/junit.html)
+            HTML preview is available [here](https://sahumahesh0512.github.io/lint-report/test-report.html)
