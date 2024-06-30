@@ -53,7 +53,7 @@ jobs:
       - name: Commit HTML report to 1-test branch
         run: |
           chmod +x html_report.sh
-          ./html_report.sh
+          ./html-report.sh
 
       - name: Post HTML preview link as comment
         if: github.event_name == 'pull_request'
